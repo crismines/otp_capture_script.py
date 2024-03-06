@@ -1,2 +1,2 @@
-telebot==<version>
-selenium==<version>
+telebot==3.8
+selenium==3.141.0
