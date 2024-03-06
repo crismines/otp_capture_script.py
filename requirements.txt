@@ -1,0 +1,2 @@
+telebot==<version>
+selenium==<version>
