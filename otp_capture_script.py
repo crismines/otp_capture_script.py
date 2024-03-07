@@ -8,7 +8,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Initialize the Telegram bot
-bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
+bot_token = " "YOUR_TELEGRAM_BOT_TOKEN""
+telegram_user_id =   # Replace with your actual user ID
 bot = telebot.TeleBot(bot_token)
 
 # Global variables to control script execution, headless mode, and auto-start on system boot
@@ -37,20 +38,21 @@ def capture_otp():
             # Add OTP detection logic here
             try:
                 otp_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "otp"))
+                    EC.presence_of_element_located((By.CLASS_NAME, "css-ocx2w6-text_body"))
                 )
                 otp = otp_element.text.strip()
                 if otp:
                     send_otp_telegram(otp)
-            except:
-                pass
+            except Exception as e:
+                print(f"Error capturing OTP: {e}")
+
             time.sleep(capture_interval)
 
 # Function to send OTP to Telegram
 def send_otp_telegram(otp):
-    bot.send_message("YOUR_TELEGRAM_USER_ID", f"Received OTP: {otp}")  # Replace with your actual user ID
+    bot.send_message(telegram_user_id, f"Received OTP: {otp}")
 
-# Menu to change websites.txt, run script, view websites, set interval, stop script, display last OTP, toggle headless mode, pause/resume script, and auto-start on system boot
+# Menu and other functions
 def main_menu():
     print("1. Change contents of websites.txt")
     print("2. Run Script")
@@ -158,3 +160,4 @@ def toggle_auto_start():
 # Main program
 if __name__ == "__main__":
     main_menu()
+
