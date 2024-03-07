@@ -1,7 +1,12 @@
+# Create with [AIPRM Prompt "Python GPT | Your Programming Companion"](https://www.aiprm.com/prompts/softwareengineering/backend-development/1826467218704306176/)
+
 import time
 import random
 import telebot
 import threading
+import logging
+import requests
+from bs4 import BeautifulSoup  # Import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -25,22 +30,12 @@ def retrieve_websites():
 
 # Function to capture OTP and send to Telegram
 def capture_otp():
-    options = webdriver.FirefoxOptions()
-    if headless_mode:
-        options.add_argument("--headless")
-
-    driver = webdriver.Firefox(options=options)
     websites = retrieve_websites()
 
     while running:
         for website in websites:
             try:
-                driver.get(website)
-                # Add OTP detection logic here
-                otp_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "css-ocx2w6-text_body"))
-                )
-                otp = otp_element.text.strip()
+                otp = scrape_website(website)
                 if otp:
                     send_otp_telegram(otp)
             except Exception as e:
@@ -48,13 +43,38 @@ def capture_otp():
 
         time.sleep(capture_interval)
 
-    driver.quit()
+# Function to scrape website for OTP using headless HTTP request
+def scrape_website(website):
+    try:
+        response = requests.get(website, timeout=10)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        otp = extract_otp_from_response(response.text)
+        return otp
+    except requests.RequestException as e:
+        print(f"Error accessing {website}: {e}")
+        logging.error(f"Error accessing {website}: {e}")
+        return None
+
+# Function to extract OTP from the HTTP response using BeautifulSoup
+def extract_otp_from_response(response_text):
+    try:
+        soup = BeautifulSoup(response_text, 'html.parser')
+        otp_element = soup.find('span', class_='otp')  # Adjust based on actual HTML structure
+        otp = otp_element.text.strip() if otp_element else None
+        return otp
+    except Exception as e:
+        print(f"Error extracting OTP: {e}")
+        logging.error(f"Error extracting OTP: {e}")
+        return None
 
 # Function to send OTP to Telegram
 def send_otp_telegram(otp):
     bot.send_message(telegram_user_id, f"Received OTP: {otp}")
 
 # Menu and other functions...
+
+# Logging configuration
+logging.basicConfig(filename='script_log.txt', level=logging.INFO)
 
 def main_menu():
     print("1. Change contents of websites.txt")
@@ -120,12 +140,13 @@ def view_current_websites():
 # Function to set capture interval
 def set_capture_interval():
     global capture_interval
-    new_interval = input("Enter capture interval in seconds: ")
-    try:
-        capture_interval = int(new_interval)
-        print(f"Capture interval set to {capture_interval} seconds.")
-    except ValueError:
-        print("Invalid input. Please enter a valid number.")
+    new_interval = input("Enter capture interval in seconds (or press Enter to keep current): ")
+    if new_interval:
+        try:
+            capture_interval = int(new_interval)
+            print(f"Capture interval set to {capture_interval} seconds.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
 
 # Function to stop the script
 def stop_script():
@@ -162,4 +183,5 @@ def toggle_auto_start():
 
 # Main program
 if __name__ == "__main__":
-    main_menu()
+    while True:
+        main_menu()
