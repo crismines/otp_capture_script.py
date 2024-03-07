@@ -1,2 +1,4 @@
-telebot==3.8
-selenium==3.141.0
+requests==2.26.0
+telebot==0.0.3
+beautifulsoup4==4.10.0
+selenium==4.1.0
