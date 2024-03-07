@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # Initialize the Telegram bot
 bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
-telegram_user_id = 6132367385  # Replace with your actual user ID
+telegram_user_id =   # Replace with your actual user ID
 bot = telebot.TeleBot(bot_token)
 
 # Global variables to control script execution, headless mode, and auto-start on system boot
