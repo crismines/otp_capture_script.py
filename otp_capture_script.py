@@ -21,6 +21,9 @@ capture_interval = 5  # Default capture interval in seconds
 headless_mode = False  # Default headless mode
 auto_start_enabled = False  # Default auto-start on system boot
 
+# Additional variable to control manual capture triggering
+manual_capture = False
+
 # Function to retrieve websites from a text file
 def retrieve_websites():
     with open("websites.txt", "r") as file:
@@ -31,15 +34,18 @@ def capture_otp():
     websites = retrieve_websites()
 
     while running:
-        for website in websites:
-            try:
-                otp = scrape_website(website)
-                if otp:
-                    send_otp_telegram(otp)
-            except Exception as e:
-                print(f"Error capturing OTP from {website}: {e}")
+        if manual_capture:  # Only capture if manual triggering is enabled
+            for website in websites:
+                try:
+                    otp = scrape_website(website)
+                    if otp:
+                        send_otp_telegram(otp)
+                except Exception as e:
+                    print(f"Error capturing OTP from {website}: {e}")
 
-        time.sleep(capture_interval)
+            time.sleep(capture_interval)
+        else:
+            time.sleep(1)  # Wait to avoid unnecessary CPU usage when not capturing
 
 # Function to scrape website for OTP using Selenium
 def scrape_website(website):
@@ -73,7 +79,7 @@ def scrape_website(website):
             logging.info(f"Captured OTP from {website}: {otp}")
         else:
             logging.info(f"No OTP found on {website}.")
-            
+
         return otp
     except Exception as e:
         print(f"Error capturing OTP from {website}: {e}")
@@ -85,7 +91,7 @@ def extract_otp_from_response(response_text):
     try:
         soup = BeautifulSoup(response_text, 'html.parser')
         # Adjust based on actual HTML structure where OTP is located
-        otp_element = soup.find('span', class_='otp')  
+        otp_element = soup.find('span', class_='otp')
         otp = otp_element.text.strip() if otp_element else None
         return otp
     except Exception as e:
@@ -103,6 +109,7 @@ logging.basicConfig(filename='script_log.txt', level=logging.INFO)
 # Menu functions...
 
 def main_menu():
+    global manual_capture  # Use the global variable to control manual capture triggering
     print("1. Change contents of websites.txt")
     print("2. Run Script")
     print("3. View Current Websites")
@@ -112,7 +119,8 @@ def main_menu():
     print("7. Toggle Headless Mode")
     print("8. Pause/Resume Script")
     print("9. Toggle Auto-Start on System Boot")
-    print("10. Exit Script")
+    print("10. Trigger Manual Capture")
+    print("11. Exit Script")
     choice = input("Enter your choice: ")
 
     if choice == "1":
@@ -134,6 +142,8 @@ def main_menu():
     elif choice == "9":
         toggle_auto_start()
     elif choice == "10":
+        trigger_manual_capture()
+    elif choice == "11":
         exit_script()
     else:
         print("Invalid choice.")
@@ -152,6 +162,8 @@ def change_websites_file():
     print("Contents of websites.txt updated successfully.")
 
 def run_script():
+    global manual_capture  # Use the global variable to control manual capture triggering
+    manual_capture = False  # Reset manual capture flag before starting the script
     print("Running script in the background...")
     otp_thread = threading.Thread(target=capture_otp)
     otp_thread.start()
@@ -201,6 +213,11 @@ def toggle_auto_start():
     status = "enabled" if auto_start_enabled else "disabled"
     print(f"Auto-Start on System Boot is now {status}.")
 
+def trigger_manual_capture():
+    global manual_capture
+    manual_capture = True
+    print("Manual capture triggered.")
+
 def exit_script():
     global running
     running = False
@@ -210,3 +227,4 @@ def exit_script():
 if __name__ == "__main__":
     while True:
         main_menu()
+
