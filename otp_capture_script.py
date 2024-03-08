@@ -1,5 +1,3 @@
-# Create with [AIPRM Prompt "Python GPT | Your Programming Companion"](https://www.aiprm.com/prompts/softwareengineering/backend-development/1826467218704306176/)
-
 import time
 import random
 import telebot
